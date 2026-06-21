@@ -35,8 +35,14 @@ realism:
   strength: 0.4
   model_path: models/autoencoder_v001
   fallback: statistical
-  max_attempts_per_window: 20
+  max_attempts_per_window: 10
   max_constraint_score: 0.05
+  mcmc_steps_per_window: 12
+  mcmc_temperature: 0.02
+  mcmc_proposal_scale: 0.15
+  min_condition_count: 30
+  calibration_dataset_path: data/calibration
+  statistical_gate: true
 
 tool_resolution:
   enabled: true

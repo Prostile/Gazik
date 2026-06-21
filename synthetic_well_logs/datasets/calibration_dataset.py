@@ -9,6 +9,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from synthetic_well_logs.datasets.conditions import classify_electrofacies
 from synthetic_well_logs.datasets.parquet_store import read_parquet, write_parquet
 from synthetic_well_logs.datasets.windowing import CalibrationWindow
 
@@ -88,6 +89,14 @@ class CalibrationDatasetBuilder:
         window_dir = root / "windows"
         window_dir.mkdir(parents=True, exist_ok=True)
         curve_names = windows[0].curve_names
+        rt_medians = [window.curve_medians.get("RT", float("nan")) for window in windows]
+        finite_rt = np.asarray(rt_medians, dtype=float)
+        finite_rt = finite_rt[np.isfinite(finite_rt)]
+        rt_p75 = float(np.quantile(finite_rt, 0.75)) if finite_rt.size else None
+        for window in windows:
+            label = classify_electrofacies(window.curve_medians, rt_reference_p75=rt_p75)
+            window.condition_label = label
+            window.dominant_electrofacies = label
         normalization = self._fit_normalization(windows, curve_names)
         rows: list[dict[str, object]] = []
 
@@ -109,6 +118,12 @@ class CalibrationDatasetBuilder:
                     "source_file": window.source_file,
                     "tensor_path": relative.as_posix(),
                     "valid_fraction": float(window.valid_mask.mean()),
+                    "condition_label": window.condition_label,
+                    "dominant_electrofacies": window.dominant_electrofacies,
+                    **{
+                        f"{curve.lower()}_median": window.curve_medians.get(curve, float("nan"))
+                        for curve in curve_names
+                    },
                 }
             )
 
@@ -119,6 +134,7 @@ class CalibrationDatasetBuilder:
             "created_at": datetime.now(UTC).isoformat(),
             "source": source,
             "curve_names": curve_names,
+            "required_model_curves": curve_names,
             "window_size": int(windows[0].curves.shape[1]),
             "stride": stride,
             "target_step_m": target_step_m,

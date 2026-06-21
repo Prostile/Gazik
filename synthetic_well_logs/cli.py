@@ -119,6 +119,7 @@ def compare_stats_command(
     synthetic: Annotated[Path, typer.Option("--synthetic", exists=True, dir_okay=False)],
     calibration: Annotated[Path, typer.Option("--calibration", exists=True, file_okay=False)],
     out: Annotated[Path, typer.Option("--out")],
+    strict: Annotated[bool, typer.Option("--strict")] = False,
 ) -> None:
     """Compare synthetic LAS statistics with a calibration dataset."""
     try:
@@ -126,5 +127,7 @@ def compare_stats_command(
     except (OSError, ValueError, RuntimeError) as exc:
         typer.echo(f"Statistics comparison failed: {exc}", err=True)
         raise typer.Exit(code=2) from exc
-    typer.echo(f"Compared {len(report['deltas'])} curves")
+    typer.echo(f"Compared {len(report['deltas'])} curves: {report['gate']['status']}")
     typer.echo(f"  report: {out / 'validation_summary.md'}")
+    if strict and report["gate"]["status"] == "failed":
+        raise typer.Exit(code=1)

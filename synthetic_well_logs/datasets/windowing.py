@@ -5,6 +5,11 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
+from synthetic_well_logs.datasets.conditions import (
+    classify_electrofacies,
+    window_curve_medians,
+)
+from synthetic_well_logs.datasets.constants import MODEL_CURVES
 from synthetic_well_logs.datasets.qc import QCResult
 
 
@@ -20,6 +25,9 @@ class CalibrationWindow:
     valid_mask: np.ndarray
     normalization: dict[str, dict[str, float | str]] = field(default_factory=dict)
     source_file: str = ""
+    condition_label: str = "unknown_mixed"
+    dominant_electrofacies: str = "unknown_mixed"
+    curve_medians: dict[str, float] = field(default_factory=dict)
 
 
 class WindowSegmenter:
@@ -37,7 +45,7 @@ class WindowSegmenter:
         self.window_size = window_size
         self.stride = stride
         self.min_valid_fraction = min_valid_fraction
-        self.required_curves = required_curves or ["GR", "RHOB", "NPHI", "DT", "RT"]
+        self.required_curves = required_curves or list(MODEL_CURVES)
 
     def segment(
         self,
@@ -65,6 +73,8 @@ class WindowSegmenter:
                 fill = float(np.nanmedian(channel_values[valid[channel]]))
                 channel_values[~valid[channel]] = fill
             depth = frame["DEPT"].to_numpy(dtype=float)[start:stop]
+            medians = window_curve_medians(filled, self.required_curves, valid)
+            condition_label = classify_electrofacies(medians)
             output.append(
                 CalibrationWindow(
                     window_id=f"{well_id}_{start:08d}",
@@ -76,6 +86,9 @@ class WindowSegmenter:
                     curve_names=list(self.required_curves),
                     valid_mask=valid,
                     source_file=source_file,
+                    condition_label=condition_label,
+                    dominant_electrofacies=condition_label,
+                    curve_medians=medians,
                 )
             )
         return output

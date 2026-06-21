@@ -102,6 +102,12 @@ class RealismConfig(StrictModel):
     fallback: Literal["statistical", "none"] = "statistical"
     max_attempts_per_window: int = Field(default=20, ge=1, le=200)
     max_constraint_score: float = Field(default=0.05, ge=0, le=1)
+    mcmc_steps_per_window: int = Field(default=12, ge=1, le=200)
+    mcmc_temperature: float = Field(default=0.02, ge=1e-6, le=1.0)
+    mcmc_proposal_scale: float = Field(default=0.15, ge=1e-6, le=5.0)
+    min_condition_count: int = Field(default=30, ge=1)
+    calibration_dataset_path: str | None = None
+    statistical_gate: bool = False
 
 
 class ToolResolutionConfig(StrictModel):

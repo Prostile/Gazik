@@ -7,7 +7,10 @@ from pathlib import Path
 import numpy as np
 
 from synthetic_well_logs.ml.autoencoder import AutoencoderConfig, Conv1dAutoencoder
-from synthetic_well_logs.ml.latent_sampling import LatentSampler
+from synthetic_well_logs.ml.latent_sampling import (
+    ConditionAwareLatentSampler,
+    LatentDistribution,
+)
 
 
 @dataclass(slots=True)
@@ -16,7 +19,7 @@ class RealismModelArtifact:
     model: Conv1dAutoencoder
     config: AutoencoderConfig
     normalization: dict[str, dict[str, float | str]]
-    sampler: LatentSampler
+    sampler: ConditionAwareLatentSampler
 
     @classmethod
     def load(cls, root: str | Path) -> RealismModelArtifact:
@@ -40,5 +43,21 @@ class RealismModelArtifact:
         model.eval()
         normalization = json.loads((directory / "normalization.json").read_text(encoding="utf-8"))
         latent_stats = np.load(directory / "latent_stats.npz")
-        sampler = LatentSampler(latent_stats["mean"], latent_stats["covariance"])
+        condition_stats: dict[str, LatentDistribution] = {}
+        condition_json = directory / "latent_stats_by_condition.json"
+        condition_npz = directory / "latent_stats_by_condition.npz"
+        if condition_json.exists() and condition_npz.exists():
+            condition_manifest = json.loads(condition_json.read_text(encoding="utf-8"))
+            condition_values = np.load(condition_npz)
+            for label, item in condition_manifest.items():
+                condition_stats[label] = LatentDistribution(
+                    mean=condition_values[item["mean_key"]],
+                    covariance=condition_values[item["covariance_key"]],
+                    count=int(item["count"]),
+                )
+        sampler = ConditionAwareLatentSampler(
+            latent_stats["mean"],
+            latent_stats["covariance"],
+            condition_stats,
+        )
         return cls(directory, model, config, normalization, sampler)

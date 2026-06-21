@@ -138,13 +138,30 @@ def train_autoencoder(
             batch = torch.from_numpy(arrays[start : start + batch_size]).to(selected_device)
             latent_chunks.append(model.encode(batch).cpu().numpy())
     latent = np.concatenate(latent_chunks)
-    covariance = np.cov(latent, rowvar=False)
-    if covariance.ndim == 0:
-        covariance = np.eye(latent_dim) * 1e-3
+    covariance = _latent_covariance(latent, latent_dim)
     np.savez_compressed(
         root / "latent_stats.npz",
         mean=np.mean(latent, axis=0),
         covariance=covariance,
+    )
+    condition_arrays: dict[str, np.ndarray] = {}
+    condition_manifest: dict[str, dict[str, int | str]] = {}
+    labels = dataset.metadata["condition_label"].astype(str).to_numpy()
+    for label in sorted(set(labels)):
+        condition_latent = latent[labels == label]
+        mean_key = f"{label}_mean"
+        covariance_key = f"{label}_covariance"
+        condition_arrays[mean_key] = np.mean(condition_latent, axis=0)
+        condition_arrays[covariance_key] = _latent_covariance(condition_latent, latent_dim)
+        condition_manifest[label] = {
+            "count": int(len(condition_latent)),
+            "mean_key": mean_key,
+            "covariance_key": covariance_key,
+        }
+    np.savez_compressed(root / "latent_stats_by_condition.npz", **condition_arrays)
+    (root / "latent_stats_by_condition.json").write_text(
+        json.dumps(condition_manifest, ensure_ascii=False, indent=2),
+        encoding="utf-8",
     )
     report = {
         "created_at": datetime.now(UTC).isoformat(),
@@ -158,9 +175,21 @@ def train_autoencoder(
         "device": selected_device,
         "training_windows": int(len(train_x)),
         "validation_windows": int(len(val_x)),
+        "condition_statistics": {
+            label: {"count": config["count"]} for label, config in condition_manifest.items()
+        },
     }
     (root / "training_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     return report
+
+
+def _latent_covariance(latent: np.ndarray, latent_dim: int) -> np.ndarray:
+    if len(latent) < 2:
+        return np.eye(latent_dim) * 1e-3
+    covariance = np.asarray(np.cov(latent, rowvar=False), dtype=float)
+    if covariance.ndim == 0:
+        return np.eye(latent_dim) * max(float(covariance), 1e-3)
+    return covariance + np.eye(latent_dim) * 1e-6

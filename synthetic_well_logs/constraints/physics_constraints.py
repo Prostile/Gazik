@@ -6,16 +6,14 @@ import pandas as pd
 from synthetic_well_logs.config import ScenarioConfig
 from synthetic_well_logs.constraints.consistency import expected_curves
 from synthetic_well_logs.constraints.reports import FACIES_CURVE_RANGES
+from synthetic_well_logs.constraints.scoring import (
+    GLOBAL_RANGES,
+    TruthSlice,
+    score_curves_against_truth,
+)
 from synthetic_well_logs.domain import GroundTruth
 
-RANGES = {
-    "GR": (0.0, 250.0),
-    "CALI": (5.0, 24.0),
-    "RHOB": (1.5, 3.1),
-    "NPHI": (-0.15, 0.8),
-    "DT": (40.0, 200.0),
-    "RT": (0.1, 10_000.0),
-}
+RANGES = GLOBAL_RANGES
 
 CONSISTENCY_TOLERANCE = {"GR": 40.0, "RHOB": 0.22, "NPHI": 0.20, "DT": 32.0}
 CORRECTION_TOLERANCE = {"GR": 38.0, "RHOB": 0.20, "NPHI": 0.18, "DT": 30.0}
@@ -30,6 +28,11 @@ class PhysicsConstraints:
     ) -> tuple[pd.DataFrame, dict[str, object]]:
         del scenario
         result = curves.copy(deep=True)
+        truth_slice = TruthSlice.from_ground_truth(truth)
+        before_score = score_curves_against_truth(
+            {curve: result[curve].to_numpy(dtype=float) for curve in result if curve != "DEPT"},
+            truth_slice,
+        )
         before: dict[str, int] = {}
         for curve, (lower, upper) in RANGES.items():
             if curve not in result:
@@ -83,10 +86,9 @@ class PhysicsConstraints:
             or "RT" not in result
             or np.all(result["RT"].to_numpy(dtype=float)[truth.is_pay] >= 2.0)
         )
-        rate_values = list(consistency_rates.values())
-        range_rate = sum(after.values()) / max(len(result) * max(len(after), 1), 1)
-        total_rate = (
-            float(np.mean([range_rate, *rate_values])) if rate_values else float(range_rate)
+        after_score = score_curves_against_truth(
+            {curve: result[curve].to_numpy(dtype=float) for curve in result if curve != "DEPT"},
+            truth_slice,
         )
         report: dict[str, object] = {
             "range_violations_before": before,
@@ -95,7 +97,9 @@ class PhysicsConstraints:
             **consistency_rates,
             "gas_effect_preserved": gas_preserved,
             "pay_interval_preserved": pay_preserved,
-            "constraint_violation_rate": total_rate,
+            "score_components_before": before_score.components,
+            "score_components_after": after_score.components,
+            "constraint_violation_rate": after_score.total,
         }
         return result, report
 

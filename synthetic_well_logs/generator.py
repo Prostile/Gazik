@@ -71,6 +71,6 @@ def generate_well(scenario: ScenarioConfig) -> GeneratedWell:
             "post_artifact_validation": post_artifact_report,
             "physical": summarize_physical_validation(constraint_report),
             "educational": validate_educational_objective(truth, scenario),
-            "statistical": statistical_validation_status(realism_report),
+            "statistical": statistical_validation_status(realism_report, curves, scenario),
         },
     )

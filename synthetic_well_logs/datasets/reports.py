@@ -10,6 +10,10 @@ import pandas as pd
 
 from synthetic_well_logs.datasets.calibration_dataset import CalibrationDataset
 from synthetic_well_logs.datasets.qc import QC_RANGES
+from synthetic_well_logs.validation.statistical_gate import (
+    StatisticalGateConfig,
+    evaluate_statistical_gate,
+)
 
 
 def curve_statistics(frame: pd.DataFrame, curves: list[str]) -> dict[str, Any]:
@@ -60,8 +64,11 @@ def _crossplot_statistics(frame: pd.DataFrame, left: str, right: str) -> dict[st
         return {"count": int(len(pairs)), "correlation": 0.0, "slope": 0.0, "intercept": 0.0}
     x = pairs[left].to_numpy(dtype=float)
     y = pairs[right].to_numpy(dtype=float)
-    slope, intercept = np.polyfit(x, y, 1)
-    correlation = 0.0 if np.std(x) == 0 or np.std(y) == 0 else float(np.corrcoef(x, y)[0, 1])
+    if np.std(x) <= 1e-12 or np.std(y) <= 1e-12:
+        slope, intercept, correlation = 0.0, float(np.mean(y)), 0.0
+    else:
+        slope, intercept = np.polyfit(x, y, 1)
+        correlation = float(np.corrcoef(x, y)[0, 1])
     return {
         "count": int(len(pairs)),
         "correlation": correlation,
@@ -82,6 +89,7 @@ def compare_synthetic_to_calibration(
     synthetic_path: str | Path,
     calibration_path: str | Path,
     out_dir: str | Path,
+    gate_config: StatisticalGateConfig | None = None,
 ) -> dict[str, Any]:
     dataset = CalibrationDataset.open(calibration_path)
     real_frame = calibration_frame(dataset)
@@ -96,6 +104,7 @@ def compare_synthetic_to_calibration(
     )
     real_stats = curve_statistics(real_frame, dataset.curve_names)
     synthetic_stats = curve_statistics(synthetic_frame, dataset.curve_names)
+    gate = evaluate_statistical_gate(real_stats, synthetic_stats, gate_config)
     deltas: dict[str, dict[str, float]] = {}
     for curve in dataset.curve_names:
         if real_stats["curves"][curve].get("count", 0) and synthetic_stats["curves"][curve].get(
@@ -113,7 +122,8 @@ def compare_synthetic_to_calibration(
     payloads = {
         "calibration_statistics.json": real_stats,
         "synthetic_statistics.json": synthetic_stats,
-        "synthetic_vs_real_statistics.json": {"deltas": deltas},
+        "synthetic_vs_real_statistics.json": {"deltas": deltas, "gate": gate},
+        "statistical_gate.json": gate,
         "correlation_matrix_real.json": real_stats["correlation_matrix"],
         "correlation_matrix_synthetic.json": synthetic_stats["correlation_matrix"],
     }
@@ -132,5 +142,6 @@ def compare_synthetic_to_calibration(
         f"| {curve} | {metrics['mean']:.5g} | {metrics['std']:.5g} |"
         for curve, metrics in deltas.items()
     )
+    lines.extend(["", f"Gate status: **{gate['status']}**"])
     (root / "validation_summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return {"real": real_stats, "synthetic": synthetic_stats, "deltas": deltas}
+    return {"real": real_stats, "synthetic": synthetic_stats, "deltas": deltas, "gate": gate}

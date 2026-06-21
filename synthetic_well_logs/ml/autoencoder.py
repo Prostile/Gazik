@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Any
 
+from synthetic_well_logs.datasets.constants import MODEL_CURVES
+
 try:
     import torch
     from torch import nn
@@ -15,7 +17,7 @@ except ImportError:  # pragma: no cover - exercised by optional dependency users
 
 @dataclass(frozen=True, slots=True)
 class AutoencoderConfig:
-    channels: tuple[str, ...] = ("GR", "RHOB", "NPHI", "DT", "RT")
+    channels: tuple[str, ...] = MODEL_CURVES
     window_size: int = 128
     latent_dim: int = 32
     hidden_channels: int = 64

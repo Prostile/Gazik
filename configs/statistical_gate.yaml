@@ -1,0 +1,6 @@
+max_mean_z_delta: 1.5
+max_std_ratio_delta: 1.0
+max_correlation_distance: 0.45
+max_autocorrelation_delta: 0.35
+min_passed_curves_fraction: 0.7
+

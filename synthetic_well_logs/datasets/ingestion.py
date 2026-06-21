@@ -12,6 +12,7 @@ from synthetic_well_logs.datasets.calibration_dataset import (
     CalibrationDataset,
     CalibrationDatasetBuilder,
 )
+from synthetic_well_logs.datasets.constants import MODEL_CURVES
 from synthetic_well_logs.datasets.curve_aliases import CurveAliasesConfig, CurveCanonicalizer
 from synthetic_well_logs.datasets.parquet_store import write_parquet
 from synthetic_well_logs.datasets.qc import QCMaskBuilder
@@ -37,12 +38,19 @@ class IngestionPipeline:
         window_size: int = 128,
         stride: int = 64,
         min_valid_fraction: float = 0.85,
+        required_model_curves: tuple[str, ...] = MODEL_CURVES,
     ):
         self.canonicalizer = CurveCanonicalizer(aliases)
         self.normalizer = UnitNormalizer()
         self.resampler = DepthResampler(target_step_m, max_interpolation_gap_m)
         self.qc = QCMaskBuilder()
-        self.segmenter = WindowSegmenter(window_size, stride, min_valid_fraction)
+        self.required_model_curves = required_model_curves
+        self.segmenter = WindowSegmenter(
+            window_size,
+            stride,
+            min_valid_fraction,
+            required_curves=list(required_model_curves),
+        )
         self.target_step_m = target_step_m
 
     def ingest(self, input_path: str | Path, out_dir: str | Path) -> IngestionResult:
@@ -58,6 +66,7 @@ class IngestionPipeline:
         windows: list[CalibrationWindow] = []
         flat_frames: list[pd.DataFrame] = []
         for path in files:
+            found_curves: list[str] = []
             try:
                 las = lasio.read(path)
                 well = self.canonicalizer.canonicalize(las, str(path))
@@ -67,8 +76,10 @@ class IngestionPipeline:
                     for curve in well.curves.columns
                     if curve != "DEPT" and curve not in well.unusable_curves
                 ]
-                if len(useful) < 3:
-                    raise ValueError("fewer than three usable curves")
+                found_curves = useful
+                missing = [curve for curve in self.required_model_curves if curve not in useful]
+                if missing:
+                    raise ValueError(f"missing required model channels: {', '.join(missing)}")
                 well = self.resampler.resample(well)
                 qc = self.qc.build(well.curves, well.well_id)
                 well_windows = self.segmenter.segment(
@@ -103,13 +114,29 @@ class IngestionPipeline:
             except (OSError, ValueError, KeyError) as exc:
                 rejected_files += 1
                 file_reports.append(
-                    {"source_file": str(path), "status": "rejected", "reason": str(exc)}
+                    {
+                        "source_file": str(path),
+                        "status": "rejected",
+                        "reason": str(exc),
+                        "found_curves": found_curves,
+                    }
                 )
 
-        if not windows:
-            raise ValueError("ingestion produced no calibration windows")
         root = Path(out_dir)
         root.mkdir(parents=True, exist_ok=True)
+        report = {
+            "accepted_files": accepted_files,
+            "rejected_files": rejected_files,
+            "window_count": len(windows),
+            "files": file_reports,
+            "curves": qc_reports,
+        }
+        if not windows:
+            (root / "ingestion_report.json").write_text(
+                json.dumps(report, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            raise ValueError("ingestion produced no calibration windows")
         curves = pd.concat(flat_frames, ignore_index=True)
         write_parquet(curves, root / "curves.parquet")
         dataset = CalibrationDatasetBuilder().build(
@@ -121,13 +148,6 @@ class IngestionPipeline:
             stride=self.segmenter.stride,
             qc_summary={"accepted_files": accepted_files, "rejected_files": rejected_files},
         )
-        report = {
-            "accepted_files": accepted_files,
-            "rejected_files": rejected_files,
-            "window_count": len(windows),
-            "files": file_reports,
-            "curves": qc_reports,
-        }
         (root / "ingestion_report.json").write_text(
             json.dumps(report, ensure_ascii=False, indent=2),
             encoding="utf-8",
