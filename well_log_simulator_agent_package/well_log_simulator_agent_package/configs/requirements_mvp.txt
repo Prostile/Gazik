@@ -1,0 +1,11 @@
+numpy
+pandas
+scipy
+pydantic
+pyyaml
+lasio
+plotly
+matplotlib
+typer
+pytest
+ruff

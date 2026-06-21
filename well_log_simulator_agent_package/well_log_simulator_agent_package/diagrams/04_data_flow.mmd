@@ -1,0 +1,30 @@
+flowchart LR
+    subgraph RawData[Raw calibration data]
+        A1[Real LAS files]
+        A2[Metadata]
+    end
+    subgraph Ingestion[Data ingestion]
+        B1[lasio read]
+        B2[Curve aliases]
+        B3[Unit normalization]
+        B4[QC masks]
+        B5[Depth resampling]
+        B6[Window segmentation]
+    end
+    subgraph Store[Research store]
+        C1[Parquet curves]
+        C2[Window tensors]
+        C3[Statistics reports]
+    end
+    subgraph Models[Realism models]
+        D1[Autoencoder]
+        D2[Latent sampler / MCMC]
+        D3[Statistical priors]
+    end
+    A1 --> B1 --> B2 --> B3 --> B4 --> B5 --> B6
+    B6 --> C1
+    B6 --> C2
+    C1 --> C3
+    C2 --> D1
+    D1 --> D2
+    C3 --> D3

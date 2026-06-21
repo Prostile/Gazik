@@ -1,0 +1,13 @@
+{
+  "well_id": "TRAINING_GAS_SAND_001",
+  "scenario_id": "example_scenario_gas_sand",
+  "generator_version": "0.1.0",
+  "created_at": "2026-06-21T00:00:00Z",
+  "depth": {"start": 900.0, "stop": 1200.0, "step": 0.1, "unit": "m"},
+  "curves": ["DEPT", "GR", "CALI", "RHOB", "NPHI", "DT", "RT"],
+  "files": {
+    "las": "well.las",
+    "truth": "truth.json",
+    "preview": "preview.html"
+  }
+}

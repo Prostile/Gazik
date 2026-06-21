@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GeneratedWellManifest",
+  "type": "object",
+  "required": ["well_id", "scenario_id", "files", "curves", "generator_version"],
+  "properties": {
+    "well_id": {"type": "string"},
+    "scenario_id": {"type": "string"},
+    "generator_version": {"type": "string"},
+    "files": {"type": "object"},
+    "curves": {"type": "array", "items": {"type": "string"}},
+    "depth": {"type": "object"},
+    "created_at": {"type": "string"}
+  }
+}

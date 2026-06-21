@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StudentSubmission",
+  "type": "object",
+  "required": ["task_id", "well_id", "intervals"],
+  "properties": {
+    "task_id": {"type": "string"},
+    "well_id": {"type": "string"},
+    "intervals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["top", "base", "lithology"],
+        "properties": {
+          "top": {"type": "number"},
+          "base": {"type": "number"},
+          "lithology": {"type": "string"},
+          "fluid": {"type": "string"},
+          "vsh": {"type": "number"},
+          "phi": {"type": "number"},
+          "sw": {"type": "number"},
+          "is_reservoir": {"type": "boolean"},
+          "is_pay": {"type": "boolean"},
+          "comment": {"type": "string"}
+        }
+      }
+    }
+  }
+}

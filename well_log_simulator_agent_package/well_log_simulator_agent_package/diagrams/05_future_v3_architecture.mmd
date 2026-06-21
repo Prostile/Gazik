@@ -1,0 +1,11 @@
+flowchart TD
+    A[Physics Truth Generator] --> B[Base Curves]
+    B --> C[GAN/Diffusion Residual Enhancer]
+    C --> D[Physics Constraints]
+    D --> E[Artifact/Imputation Task Generator]
+    E --> F[LAS + Ground Truth]
+    F --> G[Student Submission]
+    G --> H[Rule-based Checker]
+    G --> I[Foundation Model Evaluator]
+    H --> J[Feedback]
+    I --> J

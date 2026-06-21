@@ -1,0 +1,40 @@
+classDiagram
+    class ScenarioConfig {
+      +well
+      +depth
+      +geology
+      +target
+      +curves
+      +artifacts
+      +seed
+    }
+    class IFaciesGenerator {
+      <<interface>>
+      +generate(config, rng) FaciesSequence
+    }
+    class ITruthGenerator {
+      <<interface>>
+      +generate(depth, facies, config, rng) GroundTruth
+    }
+    class IForwardLogModel {
+      <<interface>>
+      +generate(truth, config, rng) Curves
+    }
+    class IRealismEnhancer {
+      <<interface>>
+      +enhance(curves, truth, config, rng) Curves
+    }
+    class IArtifactSimulator {
+      <<interface>>
+      +apply(curves, truth, config, rng) Curves
+    }
+    class IExporter {
+      <<interface>>
+      +export(well, out_dir)
+    }
+    ScenarioConfig --> IFaciesGenerator
+    IFaciesGenerator --> ITruthGenerator
+    ITruthGenerator --> IForwardLogModel
+    IForwardLogModel --> IRealismEnhancer
+    IRealismEnhancer --> IArtifactSimulator
+    IArtifactSimulator --> IExporter

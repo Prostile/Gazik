@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GroundTruth",
+  "type": "object",
+  "required": ["well_id", "depth_unit", "intervals", "artifacts", "expected_student_outputs"],
+  "properties": {
+    "well_id": {"type": "string"},
+    "depth_unit": {"type": "string"},
+    "intervals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["top", "base", "facies", "lithology", "fluid", "vsh_mean", "phi_mean", "sw_mean", "is_reservoir", "is_pay"],
+        "properties": {
+          "top": {"type": "number"},
+          "base": {"type": "number"},
+          "facies": {"type": "string"},
+          "lithology": {"type": "string"},
+          "fluid": {"type": "string"},
+          "vsh_mean": {"type": "number"},
+          "phi_mean": {"type": "number"},
+          "sw_mean": {"type": "number"},
+          "is_reservoir": {"type": "boolean"},
+          "is_pay": {"type": "boolean"}
+        }
+      }
+    },
+    "contacts": {"type": "object"},
+    "artifacts": {"type": "array", "items": {"type": "object"}},
+    "expected_student_outputs": {"type": "object"}
+  }
+}

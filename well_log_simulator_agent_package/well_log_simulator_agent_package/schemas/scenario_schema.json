@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ScenarioConfig",
+  "type": "object",
+  "required": ["well", "depth", "geology", "target", "curves", "artifacts", "difficulty", "seed"],
+  "properties": {
+    "well": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string"},
+        "field": {"type": "string"},
+        "country": {"type": "string"}
+      }
+    },
+    "depth": {
+      "type": "object",
+      "required": ["start", "stop", "step", "unit"],
+      "properties": {
+        "start": {"type": "number"},
+        "stop": {"type": "number"},
+        "step": {"type": "number", "exclusiveMinimum": 0},
+        "unit": {"type": "string", "enum": ["m", "ft"]}
+      }
+    },
+    "geology": {
+      "type": "object",
+      "required": ["depositional_environment", "stacking_pattern"],
+      "properties": {
+        "depositional_environment": {"type": "string"},
+        "stacking_pattern": {"type": "string"},
+        "facies_set": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "target": {
+      "type": "object",
+      "required": ["reservoir_type", "hydrocarbon"],
+      "properties": {
+        "reservoir_type": {"type": "string"},
+        "hydrocarbon": {"type": "string", "enum": ["water", "oil", "gas", "mixed"]},
+        "net_pay_thickness_m": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+        "porosity_range": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+        "water_saturation_range": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}
+      }
+    },
+    "curves": {"type": "array", "items": {"type": "string"}},
+    "artifacts": {
+      "type": "object",
+      "properties": {
+        "noise": {"type": "boolean"},
+        "washout": {"type": "boolean"},
+        "spikes": {"type": "boolean"},
+        "missing_intervals": {"type": "boolean"},
+        "depth_shift": {"type": "boolean"}
+      }
+    },
+    "realism": {
+      "type": "object",
+      "properties": {
+        "mode": {"type": "string", "enum": ["none", "statistical", "autoencoder_mcmc", "diffusion_residual"]},
+        "strength": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "difficulty": {"type": "string", "enum": ["beginner", "intermediate", "advanced"]},
+    "seed": {"type": "integer"}
+  }
+}

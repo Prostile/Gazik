@@ -1,0 +1,44 @@
+{
+  "well_id": "TRAINING_GAS_SAND_001",
+  "depth_unit": "m",
+  "intervals": [
+    {
+      "top": 980.5,
+      "base": 994.8,
+      "facies": "clean_sandstone",
+      "lithology": "sandstone",
+      "fluid": "gas",
+      "vsh_mean": 0.08,
+      "phi_mean": 0.24,
+      "sw_mean": 0.31,
+      "is_reservoir": true,
+      "is_pay": true
+    },
+    {
+      "top": 994.8,
+      "base": 1012.2,
+      "facies": "shale",
+      "lithology": "shale",
+      "fluid": "water",
+      "vsh_mean": 0.88,
+      "phi_mean": 0.09,
+      "sw_mean": 0.95,
+      "is_reservoir": false,
+      "is_pay": false
+    }
+  ],
+  "contacts": {"owc": null, "goc": 978.0},
+  "artifacts": [
+    {"top": 940.0, "base": 949.5, "type": "washout", "affected_curves": ["CALI", "RHOB", "NPHI"]},
+    {"top": 1060.0, "base": 1062.0, "type": "missing_interval", "affected_curves": ["NPHI"]}
+  ],
+  "expected_student_outputs": {
+    "tops": true,
+    "lithology": true,
+    "vsh": true,
+    "porosity": true,
+    "sw": true,
+    "net_pay": true,
+    "bad_hole": true
+  }
+}

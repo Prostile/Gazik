@@ -1,0 +1,49 @@
+well:
+  name: TRAINING_SHALY_SAND_001
+  field: Synthetic Training Field
+  country: Synthetic
+
+depth:
+  start: 1500.0
+  stop: 1850.0
+  step: 0.1
+  unit: m
+
+geology:
+  depositional_environment: deltaic
+  stacking_pattern: coarsening_upward
+  facies_set:
+    - shale
+    - shaly_sandstone
+    - clean_sandstone
+    - tight_sandstone
+
+target:
+  reservoir_type: shaly_sandstone
+  hydrocarbon: oil
+  net_pay_thickness_m: [6, 14]
+  porosity_range: [0.12, 0.22]
+  water_saturation_range: [0.35, 0.65]
+
+curves:
+  - DEPT
+  - GR
+  - CALI
+  - RHOB
+  - NPHI
+  - DT
+  - RT
+
+artifacts:
+  noise: true
+  washout: true
+  spikes: true
+  missing_intervals: true
+  depth_shift: true
+
+realism:
+  mode: statistical
+  strength: 0.45
+
+difficulty: advanced
+seed: 123

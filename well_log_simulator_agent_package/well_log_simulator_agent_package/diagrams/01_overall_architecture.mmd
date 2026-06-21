@@ -1,0 +1,16 @@
+flowchart TD
+    A[Scenario Config YAML/JSON] --> B[Depth Grid]
+    B --> C[Semi-Markov Facies Generator]
+    C --> D[Petrophysical Truth Generator]
+    D --> E[Physics Forward Log Model]
+    E --> F[Realism Enhancer]
+    F --> G[Physics Constraints]
+    G --> H[Artifact Simulator]
+    H --> I[LAS Exporter]
+    D --> J[Ground Truth Exporter]
+    H --> K[Preview Exporter]
+    I --> L[well.las]
+    J --> M[truth.json]
+    K --> N[preview.html/png]
+    D --> O[Answer Checker]
+    M --> O

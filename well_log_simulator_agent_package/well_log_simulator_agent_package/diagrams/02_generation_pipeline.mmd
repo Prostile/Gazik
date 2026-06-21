@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant CLI
+    participant Config as ScenarioConfig
+    participant Facies as FaciesGenerator
+    participant Truth as TruthGenerator
+    participant Forward as ForwardLogModel
+    participant Realism as RealismEnhancer
+    participant Constraints
+    participant Artifacts
+    participant Export
+
+    CLI->>Config: load + validate YAML
+    Config->>Facies: generate depth intervals
+    Facies->>Truth: generate Vsh/PHI/Sw/fluid
+    Truth->>Forward: calculate base curves
+    Forward->>Realism: enhance curve texture
+    Realism->>Constraints: enforce physical consistency
+    Constraints->>Artifacts: apply noise/washout/gaps/spikes
+    Artifacts->>Export: export LAS/truth/manifest/preview

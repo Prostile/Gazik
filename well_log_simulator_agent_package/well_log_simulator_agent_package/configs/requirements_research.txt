@@ -1,0 +1,13 @@
+numpy
+pandas
+scipy
+scikit-learn
+pyarrow
+duckdb
+lasio
+plotly
+matplotlib
+torch
+mlflow
+tqdm
+umap-learn
