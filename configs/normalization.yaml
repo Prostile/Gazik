@@ -1,0 +1,7 @@
+method: zscore
+transforms:
+  GR: identity
+  RHOB: identity
+  NPHI: identity
+  DT: identity
+  RT: log

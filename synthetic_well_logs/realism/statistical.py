@@ -47,4 +47,3 @@ class StatisticalRealismEnhancer:
                 scale = CURVE_SCALE[curve] * strength * facies_factor
                 result[curve] += texture * scale
         return result
-

@@ -9,7 +9,16 @@ from synthetic_well_logs.domain import GeneratedWell
 from synthetic_well_logs.facies import SemiMarkovFaciesGenerator
 from synthetic_well_logs.forward import PhysicsForwardLogModel
 from synthetic_well_logs.petrophysics import PetrophysicalTruthGenerator
-from synthetic_well_logs.realism import NoOpRealismEnhancer, StatisticalRealismEnhancer
+from synthetic_well_logs.realism import (
+    AutoencoderMCMCRealismEnhancer,
+    NoOpRealismEnhancer,
+    StatisticalRealismEnhancer,
+)
+from synthetic_well_logs.smoothing import ToolResolutionSmoother
+from synthetic_well_logs.validation.educational_validation import validate_educational_objective
+from synthetic_well_logs.validation.physical_validation import summarize_physical_validation
+from synthetic_well_logs.validation.post_artifact import PostArtifactValidator
+from synthetic_well_logs.validation.statistical_validation import statistical_validation_status
 
 
 def create_depth_grid(scenario: ScenarioConfig) -> np.ndarray:
@@ -37,14 +46,19 @@ def generate_well(scenario: ScenarioConfig) -> GeneratedWell:
         rng,
     )
     curves = PhysicsForwardLogModel().generate(truth, scenario, rng)
+    curves = ToolResolutionSmoother().apply(curves, scenario)
 
     if scenario.realism.mode == "none":
         enhancer = NoOpRealismEnhancer()
-    else:
+    elif scenario.realism.mode == "statistical":
         enhancer = StatisticalRealismEnhancer()
+    else:
+        enhancer = AutoencoderMCMCRealismEnhancer(scenario.realism.model_path)
     curves = enhancer.enhance(curves, truth, scenario, rng)
     curves, constraint_report = PhysicsConstraints().apply(curves, truth, scenario)
     curves = ArtifactSimulator().apply(curves, truth, scenario, rng)
+    post_artifact_report = PostArtifactValidator().validate(curves, truth, scenario)
+    realism_report = getattr(enhancer, "last_report", None)
 
     return GeneratedWell(
         well_id=scenario.well.name,
@@ -52,5 +66,11 @@ def generate_well(scenario: ScenarioConfig) -> GeneratedWell:
         curves=curves,
         truth=truth,
         scenario=scenario,
-        validation=constraint_report,
+        validation={
+            "pre_artifact_constraints": constraint_report,
+            "post_artifact_validation": post_artifact_report,
+            "physical": summarize_physical_validation(constraint_report),
+            "educational": validate_educational_objective(truth, scenario),
+            "statistical": statistical_validation_status(realism_report),
+        },
     )

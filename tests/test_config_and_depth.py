@@ -35,4 +35,3 @@ def test_target_must_be_in_facies_set() -> None:
     payload["target"]["reservoir_type"] = "dolomite"
     with pytest.raises(ValidationError):
         ScenarioConfig.model_validate(payload)
-

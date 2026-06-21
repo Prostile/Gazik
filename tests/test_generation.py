@@ -29,9 +29,7 @@ def test_gas_sand_learning_objective_is_present() -> None:
     assert np.all(well.truth.facies[pay] == "clean_sandstone")
     assert np.all(well.truth.fluid[pay] == "gas")
     assert float(well.curves.loc[pay, "RT"].median()) > 2.0
-    assert float(well.curves.loc[pay, "NPHI"].median()) < float(
-        well.truth.phi[pay].mean()
-    )
+    assert float(well.curves.loc[pay, "NPHI"].median()) < float(well.truth.phi[pay].mean())
     pay_thickness = pay.sum() * scenario.depth.step
     low, high = scenario.target.net_pay_thickness_m
     assert low <= pay_thickness <= high

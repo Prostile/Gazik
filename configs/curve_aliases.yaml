@@ -1,0 +1,19 @@
+DEPT:
+  aliases: [DEPT, DEPTH, MD]
+  required: true
+  unit: m
+GR:
+  aliases: [GR, GRC, GAM, CGR]
+  unit: API
+RHOB:
+  aliases: [RHOB, RHOZ, DEN, ZDEN]
+  unit: g/cc
+NPHI:
+  aliases: [NPHI, TNPH, NPOR, NEU]
+  unit: v/v
+DT:
+  aliases: [DT, DTC, AC]
+  unit: us/ft
+RT:
+  aliases: [RT, ILD, LLD, RDEP, RESD, RESDEEP]
+  unit: ohm.m

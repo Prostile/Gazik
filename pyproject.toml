@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "synthetic-well-logs"
-version = "0.1.0"
+version = "0.2.0"
 description = "Controlled synthetic well-log generator for educational interpretation tasks"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -20,6 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.8"]
+hybrid2 = ["pyarrow>=17.0", "torch>=2.4"]
 research = ["pyarrow>=17.0", "scikit-learn>=1.5", "torch>=2.4"]
 
 [project.scripts]
@@ -38,4 +39,3 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
-

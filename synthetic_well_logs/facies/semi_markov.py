@@ -115,9 +115,9 @@ class SemiMarkovFaciesGenerator:
         target_mask: np.ndarray,
         scenario: ScenarioConfig,
     ) -> list[FaciesInterval]:
-        changes = np.flatnonzero(
-            (values[1:] != values[:-1]) | (target_mask[1:] != target_mask[:-1])
-        ) + 1
+        changes = (
+            np.flatnonzero((values[1:] != values[:-1]) | (target_mask[1:] != target_mask[:-1])) + 1
+        )
         starts = np.r_[0, changes]
         stops = np.r_[changes, values.size]
         intervals: list[FaciesInterval] = []

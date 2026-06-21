@@ -22,7 +22,7 @@ class ArtifactSimulator:
     ) -> pd.DataFrame:
         result = curves.copy(deep=True)
         if scenario.artifacts.noise:
-            self._noise(result, rng)
+            self._noise(result, truth, rng)
         if scenario.artifacts.washout:
             self._washout(result, truth, scenario, rng)
         if scenario.artifacts.spikes:
@@ -37,15 +37,29 @@ class ArtifactSimulator:
         return result
 
     @staticmethod
-    def _noise(curves: pd.DataFrame, rng: np.random.Generator) -> None:
+    def _noise(
+        curves: pd.DataFrame,
+        truth: GroundTruth,
+        rng: np.random.Generator,
+    ) -> None:
+        affected: list[str] = []
         for curve in curves.columns:
             if curve == "DEPT":
                 continue
+            affected.append(curve)
             raw = rng.normal(size=len(curves))
             if curve == "RT":
                 curves[curve] *= np.exp(raw * 0.018)
             else:
                 curves[curve] += raw * NOISE_SCALE[curve]
+        truth.artifacts.append(
+            {
+                "top": float(truth.depth[0]),
+                "base": float(truth.depth[-1]),
+                "type": "noise",
+                "affected_curves": affected,
+            }
+        )
 
     @staticmethod
     def _interval_indices(
@@ -93,9 +107,7 @@ class ArtifactSimulator:
             curves.loc[start : stop - 1, "NPHI"] += rng.uniform(0.05, 0.13)
             curves.loc[start : stop - 1, "NPHI"] += rng.normal(0, 0.025, stop - start)
         affected = [curve for curve in ("CALI", "RHOB", "NPHI") if curve in curves]
-        truth.artifacts.append(
-            self._artifact_record(truth, start, stop, "washout", affected)
-        )
+        truth.artifacts.append(self._artifact_record(truth, start, stop, "washout", affected))
 
     @staticmethod
     def _spikes(

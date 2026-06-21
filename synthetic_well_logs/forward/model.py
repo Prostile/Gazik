@@ -46,4 +46,3 @@ class PhysicsForwardLogModel:
             "RT": rt,
         }
         return pd.DataFrame({curve: all_curves[curve] for curve in scenario.curves})
-

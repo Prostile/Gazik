@@ -24,9 +24,8 @@ def test_export_roundtrip(tmp_path: Path) -> None:
     assert any(interval["is_pay"] for interval in truth["intervals"])
 
     manifest = json.loads(paths["manifest"].read_text(encoding="utf-8"))
-    assert manifest["generator_version"] == "0.1.0"
+    assert manifest["generator_version"] == "0.2.0"
     assert set(manifest["sha256"]) == {"las", "truth", "preview"}
 
     report = validate_export(paths["las"], paths["truth"])
     assert report["valid"], report["errors"]
-

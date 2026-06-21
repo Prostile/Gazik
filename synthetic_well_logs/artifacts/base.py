@@ -17,4 +17,3 @@ class IArtifactSimulator(Protocol):
         scenario: ScenarioConfig,
         rng: np.random.Generator,
     ) -> pd.DataFrame: ...
-

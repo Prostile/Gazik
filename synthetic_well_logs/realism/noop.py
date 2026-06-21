@@ -17,4 +17,3 @@ class NoOpRealismEnhancer:
     ) -> pd.DataFrame:
         del truth, scenario, rng
         return base_curves.copy(deep=True)
-

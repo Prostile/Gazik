@@ -16,15 +16,11 @@ def validate_export(well_path: str | Path, truth_path: str | Path) -> dict[str, 
     curve_names = list(las.keys())
     errors: list[str] = []
     warnings: list[str] = []
-
-    if "DEPT" not in curve_names:
+    depth = np.asarray(las["DEPT"], dtype=float) if "DEPT" in curve_names else np.array([])
+    if not depth.size:
         errors.append("LAS does not contain DEPT")
-        depth = np.array([], dtype=float)
-    else:
-        depth = np.asarray(las["DEPT"], dtype=float)
-        if depth.size < 2 or not np.all(np.diff(depth) > 0):
-            errors.append("depth is not strictly monotonic")
-
+    elif depth.size < 2 or not np.all(np.diff(depth) > 0):
+        errors.append("depth is not strictly monotonic")
     for curve in curve_names:
         if len(las[curve]) != len(depth):
             errors.append(f"curve {curve} length does not match DEPT")
@@ -33,7 +29,6 @@ def validate_export(well_path: str | Path, truth_path: str | Path) -> dict[str, 
             finite = finite[np.isfinite(finite)]
             if finite.size and (finite.min() < RANGES[curve][0] or finite.max() > RANGES[curve][1]):
                 warnings.append(f"curve {curve} contains values outside QC range")
-
     intervals = truth.get("intervals", [])
     if not intervals:
         errors.append("truth contains no intervals")
@@ -42,14 +37,17 @@ def validate_export(well_path: str | Path, truth_path: str | Path) -> dict[str, 
             if not np.isclose(left["base"], right["top"], atol=1e-6):
                 errors.append("truth intervals contain a gap or overlap")
                 break
-
-    samples = truth.get("samples", {})
-    for name, values in samples.items():
+    for name, values in truth.get("samples", {}).items():
         if len(values) != len(depth):
             errors.append(f"truth sample array {name} length does not match DEPT")
-
     return {
         "valid": not errors,
+        "categories": {
+            "structural": {"valid": not errors, "errors": errors},
+            "physical": {"valid": not warnings, "warnings": warnings},
+            "export": {"valid": "DEPT" in curve_names and bool(depth.size)},
+            "educational": {"valid": any(item.get("is_pay") for item in intervals)},
+        },
         "errors": errors,
         "warnings": warnings,
         "sample_count": int(len(depth)),

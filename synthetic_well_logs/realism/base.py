@@ -17,4 +17,3 @@ class IRealismEnhancer(Protocol):
         scenario: ScenarioConfig,
         rng: np.random.Generator,
     ) -> pd.DataFrame: ...
-

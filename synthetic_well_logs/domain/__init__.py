@@ -5,4 +5,3 @@ from synthetic_well_logs.domain.models import (
 )
 
 __all__ = ["FaciesInterval", "GeneratedWell", "GroundTruth"]
-

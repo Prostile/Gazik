@@ -96,10 +96,34 @@ class ArtifactConfig(StrictModel):
 
 
 class RealismConfig(StrictModel):
-    mode: Literal["none", "statistical", "autoencoder_mcmc", "diffusion_residual"] = (
-        "statistical"
-    )
+    mode: Literal["none", "statistical", "autoencoder_mcmc"] = "statistical"
     strength: float = Field(default=0.35, ge=0, le=1)
+    model_path: str | None = None
+    fallback: Literal["statistical", "none"] = "statistical"
+    max_attempts_per_window: int = Field(default=20, ge=1, le=200)
+    max_constraint_score: float = Field(default=0.05, ge=0, le=1)
+
+
+class ToolResolutionConfig(StrictModel):
+    enabled: bool = True
+    windows_m: dict[str, float] = Field(
+        default_factory=lambda: {
+            "GR": 0.3,
+            "RHOB": 0.2,
+            "NPHI": 0.3,
+            "DT": 0.3,
+            "RT": 0.5,
+        }
+    )
+
+    @model_validator(mode="after")
+    def validate_windows(self) -> ToolResolutionConfig:
+        unknown = set(self.windows_m) - (SUPPORTED_CURVES - {"DEPT", "CALI"})
+        if unknown:
+            raise ValueError(f"unsupported tool-resolution curves: {sorted(unknown)}")
+        if any(value <= 0 for value in self.windows_m.values()):
+            raise ValueError("tool-resolution windows must be positive")
+        return self
 
 
 class ScenarioConfig(StrictModel):
@@ -110,6 +134,7 @@ class ScenarioConfig(StrictModel):
     curves: list[str] = Field(min_length=2)
     artifacts: ArtifactConfig = Field(default_factory=ArtifactConfig)
     realism: RealismConfig = Field(default_factory=RealismConfig)
+    tool_resolution: ToolResolutionConfig = Field(default_factory=ToolResolutionConfig)
     difficulty: Literal["beginner", "intermediate", "advanced"] = "intermediate"
     seed: int = 42
 
@@ -125,10 +150,6 @@ class ScenarioConfig(StrictModel):
             raise ValueError("curves must not contain duplicates")
         if self.target.reservoir_type not in self.geology.facies_set:
             raise ValueError("target.reservoir_type must be present in geology.facies_set")
-        if self.realism.mode in {"autoencoder_mcmc", "diffusion_residual"}:
-            raise ValueError(
-                f"realism mode '{self.realism.mode}' is reserved for an optional future extra"
-            )
         return self
 
     @classmethod
@@ -150,4 +171,3 @@ class ScenarioConfig(StrictModel):
     @classmethod
     def from_yaml(cls, path: str | Path) -> ScenarioConfig:
         return cls.from_file(path)
-
