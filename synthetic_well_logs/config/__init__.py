@@ -1,3 +1,3 @@
-from synthetic_well_logs.config.scenario import ScenarioConfig
+from synthetic_well_logs.config.scenario import ResistivityModelConfig, ScenarioConfig
 
-__all__ = ["ScenarioConfig"]
+__all__ = ["ResistivityModelConfig", "ScenarioConfig"]

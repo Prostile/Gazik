@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — Educational suite
+
+- Added siltstone, marl, coal and anhydrite with shared petrophysical properties,
+  curve constraints and reservoir/pay rules.
+- Added shale-corrected resistivity configuration and five educational scenarios.
+- Added student-answer scoring for reservoir, pay, lithology and recording quality.
+- Added raw LAS collection conventions, example data and structure validation CLI.
+
 ## 0.3.0 — Full Hybrid #2
 
 - Added strict five-channel calibration contract and electrofacies window labels.

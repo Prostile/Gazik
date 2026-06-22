@@ -1,0 +1,15 @@
+well:
+  name: TRAINING_BAD_HOLE_QC_001
+depth: {start: 1800.0, stop: 1980.0, step: 0.1, unit: m}
+geology:
+  depositional_environment: shallow_marine
+  stacking_pattern: shale_sand_alternation
+  facies_set: [shale, shaly_sandstone, clean_sandstone, siltstone]
+target:
+  reservoir_type: clean_sandstone
+  hydrocarbon: gas
+curves: [DEPT, GR, CALI, RHOB, NPHI, DT, RT]
+artifacts: {noise: true, washout: true, spikes: true, missing_intervals: true, depth_shift: false}
+realism: {mode: statistical, strength: 0.40}
+difficulty: intermediate
+seed: 204

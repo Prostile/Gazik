@@ -55,6 +55,26 @@ python -m venv .venv
 Результат: `well_001.las`, `well_001_truth.json`, `well_001_manifest.json` и
 интерактивный `well_001_preview.html`.
 
+Пять готовых учебных задач генерируются одной командой:
+
+```powershell
+python -m synthetic_well_logs generate-educational-suite --out out/educational_suite
+```
+
+Проверка ответа студента и структуры будущей коллекции реальных данных:
+
+```powershell
+python -m synthetic_well_logs check-answer `
+  --answer answers/student_001.json `
+  --truth out/well_001_truth.json `
+  --out reports/student_001_check.json
+
+python -m synthetic_well_logs validate-dataset-structure --root data/raw_las
+```
+
+Форматы описаны в `docs/student_answer_format.md` и
+`docs/data_collection_guidelines.md`.
+
 ## Data ingestion
 
 Pipeline читает реальные LAS, canonicalize-ит aliases, нормализует units,

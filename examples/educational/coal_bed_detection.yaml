@@ -1,0 +1,15 @@
+well:
+  name: TRAINING_COAL_BED_DETECTION_001
+depth: {start: 1000.0, stop: 1150.0, step: 0.1, unit: m}
+geology:
+  depositional_environment: paralic_coal_bearing
+  stacking_pattern: shale_sand_alternation
+  facies_set: [shale, siltstone, coal, clean_sandstone]
+target:
+  reservoir_type: clean_sandstone
+  hydrocarbon: water
+curves: [DEPT, GR, CALI, RHOB, NPHI, DT, RT]
+artifacts: {noise: true, washout: false, spikes: true, missing_intervals: false, depth_shift: false}
+realism: {mode: statistical, strength: 0.30}
+difficulty: beginner
+seed: 201

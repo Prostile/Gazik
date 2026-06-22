@@ -1,0 +1,17 @@
+well:
+  name: TRAINING_CARBONATE_BASIC_001
+depth: {start: 1500.0, stop: 1680.0, step: 0.1, unit: m}
+geology:
+  depositional_environment: carbonate_platform
+  stacking_pattern: carbonate_evaporite_alternation
+  facies_set: [limestone, dolomite, marl, anhydrite, shale]
+target:
+  reservoir_type: limestone
+  hydrocarbon: oil
+  porosity_range: [0.08, 0.18]
+  water_saturation_range: [0.30, 0.55]
+curves: [DEPT, GR, CALI, RHOB, NPHI, DT, RT]
+artifacts: {noise: true, washout: false, spikes: true, missing_intervals: false, depth_shift: false}
+realism: {mode: statistical, strength: 0.30}
+difficulty: beginner
+seed: 203

@@ -4,36 +4,7 @@ import numpy as np
 
 from synthetic_well_logs.config import ScenarioConfig
 from synthetic_well_logs.domain import FaciesInterval, GroundTruth
-
-PRIORS = {
-    "shale": {"vsh": (0.65, 1.00), "phi": (0.03, 0.15), "sw": (0.80, 1.00)},
-    "shaly_sandstone": {
-        "vsh": (0.25, 0.60),
-        "phi": (0.08, 0.22),
-        "sw": (0.35, 1.00),
-    },
-    "clean_sandstone": {
-        "vsh": (0.00, 0.20),
-        "phi": (0.15, 0.32),
-        "sw": (0.20, 1.00),
-    },
-    "tight_sandstone": {
-        "vsh": (0.00, 0.25),
-        "phi": (0.03, 0.12),
-        "sw": (0.60, 1.00),
-    },
-    "limestone": {"vsh": (0.00, 0.15), "phi": (0.02, 0.25), "sw": (0.25, 1.00)},
-    "dolomite": {"vsh": (0.00, 0.15), "phi": (0.02, 0.20), "sw": (0.25, 1.00)},
-}
-
-LITHOLOGY = {
-    "shale": "shale",
-    "clean_sandstone": "sandstone",
-    "shaly_sandstone": "sandstone",
-    "tight_sandstone": "sandstone",
-    "limestone": "limestone",
-    "dolomite": "dolomite",
-}
+from synthetic_well_logs.rocks import FACIES_DISPLAY_NAMES_RU, LITHOLOGY, PRIORS
 
 
 def _smooth_texture(size: int, rng: np.random.Generator, correlation: float = 0.94) -> np.ndarray:
@@ -100,12 +71,16 @@ class PetrophysicalTruthGenerator:
         fluid = np.full(size, "water", dtype="U8")
         if scenario.target.hydrocarbon != "water":
             fluid[target_mask] = scenario.target.hydrocarbon
-        is_reservoir = target_mask | (
+        standard_reservoir = (
             np.isin(facies, ["clean_sandstone", "shaly_sandstone", "limestone", "dolomite"])
             & (vsh < 0.5)
             & (phi >= 0.10)
         )
+        siltstone_reservoir = (facies == "siltstone") & (vsh < 0.45) & (phi >= 0.12)
+        explicit_target = target_mask & ~np.isin(facies, ["coal", "anhydrite", "siltstone"])
+        is_reservoir = standard_reservoir | siltstone_reservoir | explicit_target
         is_pay = is_reservoir & target_mask & (fluid != "water") & (sw < 0.68)
+        is_pay &= ~np.isin(facies, ["coal", "anhydrite"])
 
         truth = GroundTruth(
             well_id=scenario.well.name,
@@ -156,6 +131,7 @@ class PetrophysicalTruthGenerator:
                     "top": interval.top,
                     "base": interval.base,
                     "facies": interval.facies,
+                    "facies_display_name_ru": FACIES_DISPLAY_NAMES_RU[interval.facies],
                     "lithology": interval.lithology,
                     "fluid": dominant_fluid,
                     "vsh_mean": round(float(np.mean(truth.vsh[mask])), 5),

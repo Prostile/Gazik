@@ -4,15 +4,7 @@ import numpy as np
 
 from synthetic_well_logs.config import ScenarioConfig
 from synthetic_well_logs.domain import FaciesInterval
-
-LITHOLOGY = {
-    "shale": "shale",
-    "clean_sandstone": "sandstone",
-    "shaly_sandstone": "sandstone",
-    "tight_sandstone": "sandstone",
-    "limestone": "limestone",
-    "dolomite": "dolomite",
-}
+from synthetic_well_logs.rocks import LITHOLOGY
 
 THICKNESS_M = {
     "shale": (7.0, 0.55),
@@ -21,6 +13,10 @@ THICKNESS_M = {
     "tight_sandstone": (4.0, 0.45),
     "limestone": (9.0, 0.50),
     "dolomite": (8.0, 0.50),
+    "siltstone": (5.0, 0.50),
+    "marl": (6.0, 0.50),
+    "coal": (2.5, 0.45),
+    "anhydrite": (5.0, 0.45),
 }
 
 

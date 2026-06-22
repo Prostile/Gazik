@@ -1,0 +1,17 @@
+well:
+  name: TRAINING_GAS_SAND_VS_TIGHT_SAND_001
+depth: {start: 2100.0, stop: 2280.0, step: 0.1, unit: m}
+geology:
+  depositional_environment: clastic_shallow_marine
+  stacking_pattern: shale_sand_alternation
+  facies_set: [shale, clean_sandstone, tight_sandstone, siltstone]
+target:
+  reservoir_type: clean_sandstone
+  hydrocarbon: gas
+  porosity_range: [0.18, 0.28]
+  water_saturation_range: [0.20, 0.45]
+curves: [DEPT, GR, CALI, RHOB, NPHI, DT, RT]
+artifacts: {noise: true, washout: false, spikes: true, missing_intervals: false, depth_shift: false}
+realism: {mode: statistical, strength: 0.35}
+difficulty: intermediate
+seed: 205

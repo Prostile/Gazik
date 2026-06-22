@@ -8,6 +8,8 @@ build/
 dist/
 out/
 tmp/
-data/
+data/calibration/
+data/student_answers/
+data/external/
 models/
 reports/

@@ -13,6 +13,7 @@ from plotly.subplots import make_subplots
 
 from synthetic_well_logs import __version__
 from synthetic_well_logs.domain import GeneratedWell, GroundTruth
+from synthetic_well_logs.rocks import FACIES_DISPLAY_NAMES_RU
 
 CURVE_META = {
     "DEPT": ("m", "Measured depth"),
@@ -55,6 +56,7 @@ def _truth_payload(truth: GroundTruth) -> dict[str, Any]:
         "samples": {
             "depth": _float_list(truth.depth),
             "facies": truth.facies.tolist(),
+            "facies_display_name_ru": [FACIES_DISPLAY_NAMES_RU[item] for item in truth.facies],
             "lithology": truth.lithology.tolist(),
             "vsh": _float_list(truth.vsh),
             "phi": _float_list(truth.phi),
@@ -128,7 +130,16 @@ def _write_preview(well: GeneratedWell, path: Path) -> None:
         col=1,
     )
     figure.update_layout(
-        title={"text": well.well_id, "x": 0.5},
+        title={
+            "text": (
+                f"{well.well_id}<br><sup>Породы сценария: "
+                + ", ".join(
+                    FACIES_DISPLAY_NAMES_RU[item] for item in well.scenario.geology.facies_set
+                )
+                + "</sup>"
+            ),
+            "x": 0.5,
+        },
         template="plotly_white",
         height=900,
         width=max(1100, len(visible_curves) * 190),
@@ -172,6 +183,10 @@ def export_generated_well(well: GeneratedWell, prefix: Path) -> dict[str, Path]:
         "seed": well.scenario.seed,
         "depth": well.scenario.depth.model_dump(),
         "curves": list(well.curves.columns),
+        "facies": [
+            {"id": item, "display_name_ru": FACIES_DISPLAY_NAMES_RU[item]}
+            for item in well.scenario.geology.facies_set
+        ],
         "files": {name: path.name for name, path in paths.items() if name != "manifest"},
         "sha256": {name: _sha256(path) for name, path in paths.items() if name != "manifest"},
         "validation": well.validation,

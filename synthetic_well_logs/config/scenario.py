@@ -15,6 +15,10 @@ SUPPORTED_FACIES = {
     "tight_sandstone",
     "limestone",
     "dolomite",
+    "siltstone",
+    "marl",
+    "coal",
+    "anhydrite",
 }
 
 
@@ -132,6 +136,19 @@ class ToolResolutionConfig(StrictModel):
         return self
 
 
+class ResistivityModelConfig(StrictModel):
+    model: Literal["simple_archie", "shaly_sand"] = "simple_archie"
+    rw: float = Field(default=0.08, gt=0)
+    a: float = Field(default=1.0, gt=0)
+    m: float = Field(default=2.0, gt=0)
+    n: float = Field(default=2.0, gt=0)
+    shale_conductivity_factor: float = Field(default=0.35, ge=0)
+
+
+class PetrophysicsConfig(StrictModel):
+    resistivity_model: ResistivityModelConfig = Field(default_factory=ResistivityModelConfig)
+
+
 class ScenarioConfig(StrictModel):
     well: WellConfig
     depth: DepthConfig
@@ -141,6 +158,7 @@ class ScenarioConfig(StrictModel):
     artifacts: ArtifactConfig = Field(default_factory=ArtifactConfig)
     realism: RealismConfig = Field(default_factory=RealismConfig)
     tool_resolution: ToolResolutionConfig = Field(default_factory=ToolResolutionConfig)
+    petrophysics: PetrophysicsConfig = Field(default_factory=PetrophysicsConfig)
     difficulty: Literal["beginner", "intermediate", "advanced"] = "intermediate"
     seed: int = 42
 

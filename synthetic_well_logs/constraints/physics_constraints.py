@@ -26,7 +26,6 @@ class PhysicsConstraints:
         truth: GroundTruth,
         scenario: ScenarioConfig,
     ) -> tuple[pd.DataFrame, dict[str, object]]:
-        del scenario
         result = curves.copy(deep=True)
         truth_slice = TruthSlice.from_ground_truth(truth)
         before_score = score_curves_against_truth(
@@ -41,7 +40,7 @@ class PhysicsConstraints:
             before[curve] = int(np.sum((values < lower) | (values > upper) | ~np.isfinite(values)))
             result[curve] = np.clip(values, lower, upper)
 
-        expected = expected_curves(truth)
+        expected = expected_curves(truth, scenario.petrophysics.resistivity_model)
         for curve, tolerance in CORRECTION_TOLERANCE.items():
             if curve in result:
                 result[curve] = np.clip(

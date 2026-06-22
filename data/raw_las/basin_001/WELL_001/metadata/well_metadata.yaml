@@ -1,0 +1,32 @@
+well_id: WELL_001
+source: synthetic
+country: Synthetic
+basin: basin_001
+field: Training Field
+files:
+  las: ../las/WELL_001.las
+  report: null
+  tops: ../tops/WELL_001_tops.csv
+  core: null
+  interpreted: ../interpreted/WELL_001_lithology.csv
+curve_mnemonics:
+  depth: DEPT
+  gamma_ray: GR
+  density: RHOB
+  neutron: NPHI
+  sonic: DT
+  resistivity: RT
+units:
+  depth: m
+  gamma_ray: API
+  density: g/cc
+  neutron: v/v
+  sonic: us/ft
+  resistivity: ohm.m
+data_quality:
+  trusted: true
+  comments:
+    - Minimal synthetic structure-validation fixture.
+license:
+  usage: research
+  redistribution_allowed: true

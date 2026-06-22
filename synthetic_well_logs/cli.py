@@ -8,10 +8,15 @@ import typer
 from pydantic import ValidationError
 
 from synthetic_well_logs.config import ScenarioConfig
-from synthetic_well_logs.datasets import CurveAliasesConfig, IngestionPipeline
+from synthetic_well_logs.datasets import (
+    CurveAliasesConfig,
+    IngestionPipeline,
+    validate_dataset_structure,
+)
 from synthetic_well_logs.datasets.reports import compare_synthetic_to_calibration
 from synthetic_well_logs.generator import generate_well
 from synthetic_well_logs.ml.train_autoencoder import train_autoencoder
+from synthetic_well_logs.student_answers import StudentAnswer, check_student_answer
 from synthetic_well_logs.validation import validate_export
 
 app = typer.Typer(
@@ -131,3 +136,64 @@ def compare_stats_command(
     typer.echo(f"  report: {out / 'validation_summary.md'}")
     if strict and report["gate"]["status"] == "failed":
         raise typer.Exit(code=1)
+
+
+@app.command(name="check-answer")
+def check_answer_command(
+    answer: Annotated[Path, typer.Option("--answer", exists=True, dir_okay=False)],
+    truth: Annotated[Path, typer.Option("--truth", exists=True, dir_okay=False)],
+    out: Annotated[Path, typer.Option("--out", dir_okay=False)],
+) -> None:
+    """Score a student's interval interpretation against hidden truth."""
+    try:
+        student_answer = StudentAnswer.from_file(answer)
+        truth_payload = json.loads(truth.read_text(encoding="utf-8"))
+        report = check_student_answer(student_answer, truth_payload)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(
+            json.dumps(report.model_dump(mode="json"), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except (OSError, ValueError, ValidationError, json.JSONDecodeError) as exc:
+        typer.echo(f"Answer check failed: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
+    typer.echo(f"Total score: {report.total_score:.2f}")
+    typer.echo(f"  report: {out}")
+
+
+@app.command(name="validate-dataset-structure")
+def validate_dataset_structure_command(
+    root: Annotated[Path, typer.Option("--root")],
+) -> None:
+    """Validate raw LAS metadata, references and optional interval tables."""
+    report = validate_dataset_structure(root)
+    typer.echo(json.dumps(report, ensure_ascii=False, indent=2))
+    if not report["valid"]:
+        raise typer.Exit(code=1)
+
+
+@app.command(name="generate-educational-suite")
+def generate_educational_suite_command(
+    out: Annotated[Path, typer.Option("--out")],
+) -> None:
+    """Generate all bundled educational scenarios."""
+    scenario_root = Path("examples/educational")
+    if not scenario_root.exists():
+        scenario_root = Path(__file__).parents[1] / "examples" / "educational"
+    scenario_paths = sorted(scenario_root.glob("*.yaml"))
+    if not scenario_paths:
+        typer.echo(f"No educational scenarios found in {scenario_root}", err=True)
+        raise typer.Exit(code=2)
+    try:
+        out.mkdir(parents=True, exist_ok=True)
+        generated: list[tuple[str, dict[str, Path]]] = []
+        for scenario_path in scenario_paths:
+            config = ScenarioConfig.from_file(scenario_path)
+            well = generate_well(config)
+            generated.append((well.well_id, well.export(out / scenario_path.stem)))
+    except (OSError, ValueError, RuntimeError, ValidationError) as exc:
+        typer.echo(f"Educational suite generation failed: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
+    typer.echo(f"Generated {len(generated)} educational wells in {out}")
+    for well_id, paths in generated:
+        typer.echo(f"  {well_id}: {paths['las'].name}")

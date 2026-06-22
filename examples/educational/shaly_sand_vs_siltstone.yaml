@@ -1,0 +1,19 @@
+well:
+  name: TRAINING_SHALY_SAND_VS_SILTSTONE_001
+depth: {start: 1200.0, stop: 1380.0, step: 0.1, unit: m}
+geology:
+  depositional_environment: deltaic
+  stacking_pattern: coarsening_upward
+  facies_set: [shale, shaly_sandstone, siltstone, clean_sandstone]
+target:
+  reservoir_type: shaly_sandstone
+  hydrocarbon: oil
+  porosity_range: [0.12, 0.20]
+  water_saturation_range: [0.35, 0.60]
+curves: [DEPT, GR, CALI, RHOB, NPHI, DT, RT]
+petrophysics:
+  resistivity_model: {model: shaly_sand, rw: 0.08, a: 1.0, m: 2.0, n: 2.0, shale_conductivity_factor: 0.35}
+artifacts: {noise: true, washout: false, spikes: true, missing_intervals: false, depth_shift: false}
+realism: {mode: statistical, strength: 0.35}
+difficulty: intermediate
+seed: 202
