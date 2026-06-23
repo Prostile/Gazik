@@ -126,19 +126,23 @@ class PetrophysicalTruthGenerator:
                 mask = (truth.depth >= interval.top) & (truth.depth < interval.base)
             fluids, fluid_counts = np.unique(truth.fluid[mask], return_counts=True)
             dominant_fluid = str(fluids[np.argmax(fluid_counts)]) if mask.any() else "water"
-            output.append(
-                {
-                    "top": interval.top,
-                    "base": interval.base,
-                    "facies": interval.facies,
-                    "facies_display_name_ru": FACIES_DISPLAY_NAMES_RU[interval.facies],
-                    "lithology": interval.lithology,
-                    "fluid": dominant_fluid,
-                    "vsh_mean": round(float(np.mean(truth.vsh[mask])), 5),
-                    "phi_mean": round(float(np.mean(truth.phi[mask])), 5),
-                    "sw_mean": round(float(np.mean(truth.sw[mask])), 5),
-                    "is_reservoir": bool(np.any(truth.is_reservoir[mask])),
-                    "is_pay": bool(np.any(truth.is_pay[mask])),
-                }
-            )
+            summary: dict[str, object] = {
+                "top": interval.top,
+                "base": interval.base,
+                "facies": interval.facies,
+                "facies_display_name_ru": FACIES_DISPLAY_NAMES_RU[interval.facies],
+                "lithology": interval.lithology,
+                "fluid": dominant_fluid,
+                "vsh_mean": round(float(np.mean(truth.vsh[mask])), 5),
+                "phi_mean": round(float(np.mean(truth.phi[mask])), 5),
+                "sw_mean": round(float(np.mean(truth.sw[mask])), 5),
+                "is_reservoir": bool(np.any(truth.is_reservoir[mask])),
+                "is_pay": bool(np.any(truth.is_pay[mask])),
+            }
+            if interval.injected_role:
+                summary["injected_role"] = interval.injected_role
+                summary["injection_source"] = interval.injection_source or "required_interval"
+                summary["required_interval_index"] = interval.required_interval_index
+                summary["placement"] = interval.placement
+            output.append(summary)
         return output
