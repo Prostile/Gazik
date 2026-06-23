@@ -15,6 +15,7 @@ required_intervals:
     thickness_m: [5.0, 10.0]
     count: 1
     role: comparison
+    placement: random
 curves: [DEPT, GR, CALI, RHOB, NPHI, DT, RT]
 petrophysics:
   resistivity_model: {model: shaly_sand, rw: 0.08, a: 1.0, m: 2.0, n: 2.0, shale_conductivity_factor: 0.35}
