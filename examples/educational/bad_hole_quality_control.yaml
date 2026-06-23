@@ -13,6 +13,7 @@ required_intervals:
     thickness_m: [4.0, 8.0]
     count: 1
     role: comparison
+    placement: random
 curves: [DEPT, GR, CALI, RHOB, NPHI, DT, RT]
 artifacts: {noise: true, washout: true, spikes: true, missing_intervals: true, depth_shift: false}
 realism: {mode: statistical, strength: 0.40}
