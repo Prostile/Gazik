@@ -188,6 +188,7 @@ def export_generated_well(well: GeneratedWell, prefix: Path) -> dict[str, Path]:
                 "facies": item.facies,
                 "count": item.count,
                 "role": item.role,
+                "placement": item.placement,
                 "thickness_m": list(item.thickness_m),
             }
             for item in well.scenario.required_intervals
