@@ -18,6 +18,10 @@ class FaciesInterval:
     facies: str
     lithology: str
     trend: str
+    injected_role: str | None = None
+    injection_source: str | None = None
+    required_interval_index: int | None = None
+    placement: str | None = None
 
 
 @dataclass(slots=True)
