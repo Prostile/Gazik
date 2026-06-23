@@ -10,6 +10,11 @@ target:
   hydrocarbon: gas
   porosity_range: [0.18, 0.28]
   water_saturation_range: [0.20, 0.45]
+required_intervals:
+  - facies: tight_sandstone
+    thickness_m: [5.0, 10.0]
+    count: 1
+    role: distractor
 curves: [DEPT, GR, CALI, RHOB, NPHI, DT, RT]
 artifacts: {noise: true, washout: false, spikes: true, missing_intervals: false, depth_shift: false}
 realism: {mode: statistical, strength: 0.35}

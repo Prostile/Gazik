@@ -151,6 +151,7 @@ class AutoencoderMCMCRealismEnhancer:
                 return score_curves_against_truth(
                     candidate_from_texture(texture),
                     current_truth,
+                    resistivity_config=scenario.petrophysics.resistivity_model,
                 ).total
 
             selected: dict[str, np.ndarray] | None = None

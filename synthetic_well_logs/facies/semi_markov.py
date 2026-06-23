@@ -48,6 +48,8 @@ class SemiMarkovFaciesGenerator:
                 current = self._next_facies(current, facies_set, scenario, rng)
 
         target_mask = self._inject_learning_target(values, scenario, rng)
+        protected_mask = target_mask.copy()
+        self._inject_required_intervals(values, protected_mask, scenario, rng)
         intervals = self._to_intervals(depth, values, target_mask, scenario)
         return values, intervals, target_mask
 
@@ -103,6 +105,48 @@ class SemiMarkovFaciesGenerator:
         target_mask = np.zeros(values.size, dtype=bool)
         target_mask[start : start + count] = True
         return target_mask
+
+    @staticmethod
+    def _sample_count(thickness_m: float, scenario: ScenarioConfig) -> int:
+        thickness = thickness_m if scenario.depth.unit == "m" else thickness_m * 3.28084
+        return max(1, int(round(thickness / scenario.depth.step)))
+
+    def _inject_required_intervals(
+        self,
+        values: np.ndarray,
+        protected_mask: np.ndarray,
+        scenario: ScenarioConfig,
+        rng: np.random.Generator,
+    ) -> np.ndarray:
+        for required in scenario.required_intervals:
+            for _ in range(required.count):
+                low, high = required.thickness_m
+                thickness_m = float(rng.uniform(low, high))
+                count = self._sample_count(thickness_m, scenario)
+                start = self._choose_free_start(protected_mask, count, required.facies)
+                values[start : start + count] = required.facies
+                protected_mask[start : start + count] = True
+        return protected_mask
+
+    @staticmethod
+    def _choose_free_start(protected_mask: np.ndarray, count: int, facies: str) -> int:
+        free = ~protected_mask
+        changes = np.flatnonzero(free[1:] != free[:-1]) + 1
+        starts = np.r_[0, changes]
+        stops = np.r_[changes, free.size]
+        candidates: list[int] = []
+        for start, stop in zip(starts, stops, strict=True):
+            if not free[start] or stop - start < count:
+                continue
+            candidates.extend(range(start, stop - count + 1))
+        if not candidates:
+            raise ValueError(
+                f"cannot fit required interval for facies {facies!r}: "
+                "no free depth segment outside protected target intervals"
+            )
+        # Use a deterministic spread over the current free candidates; the caller's random
+        # thickness already controls stochasticity, and this keeps placement stable in tests.
+        return candidates[len(candidates) // 2]
 
     @staticmethod
     def _to_intervals(

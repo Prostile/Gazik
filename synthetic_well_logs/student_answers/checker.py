@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from synthetic_well_logs.domain import GroundTruth
+from synthetic_well_logs.student_answers.facies_score import score_facies
 from synthetic_well_logs.student_answers.lithology_score import score_lithology
 from synthetic_well_logs.student_answers.pay_score import score_pay
 from synthetic_well_logs.student_answers.quality_score import score_quality
@@ -25,13 +26,23 @@ def check_student_answer(
     reservoir = score_reservoirs(answer.reservoir_intervals, data)
     pay = score_pay(answer.pay_intervals, data)
     lithology = score_lithology(answer.lithology_intervals, data)
+    facies = score_facies(answer.facies_intervals, data) if answer.facies_intervals else None
     quality = score_quality(answer.bad_hole_intervals, data)
-    total = (
-        0.30 * reservoir["score"]
-        + 0.30 * pay["score"]
-        + 0.25 * lithology["score"]
-        + 0.15 * quality["score"]
-    )
+    if facies is None:
+        total = (
+            0.30 * reservoir["score"]
+            + 0.30 * pay["score"]
+            + 0.25 * lithology["score"]
+            + 0.15 * quality["score"]
+        )
+    else:
+        total = (
+            0.25 * reservoir["score"]
+            + 0.25 * pay["score"]
+            + 0.20 * lithology["score"]
+            + 0.20 * facies["score"]
+            + 0.10 * quality["score"]
+        )
     feedback: list[str] = []
     if reservoir["f1"] >= 0.9:
         feedback.append("Коллекторы выделены точно.")
@@ -43,6 +54,8 @@ def check_student_answer(
         feedback.append("Продуктивные интервалы выделены точно.")
     if lithology["major_confusions"]:
         feedback.append("Есть существенные ошибки определения литологии.")
+    if facies is not None and facies["major_confusions"]:
+        feedback.append("Есть существенные ошибки определения учебных фаций.")
     if quality["missed_bad_hole_intervals"]:
         feedback.append("Часть интервалов плохого качества записи пропущена.")
     if not feedback:
@@ -53,7 +66,7 @@ def check_student_answer(
         reservoir_score=reservoir,
         pay_score=pay,
         lithology_score=lithology,
+        facies_score=facies,
         quality_score=quality,
         feedback=feedback,
     )
-

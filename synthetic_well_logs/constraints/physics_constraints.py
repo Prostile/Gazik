@@ -31,6 +31,7 @@ class PhysicsConstraints:
         before_score = score_curves_against_truth(
             {curve: result[curve].to_numpy(dtype=float) for curve in result if curve != "DEPT"},
             truth_slice,
+            resistivity_config=scenario.petrophysics.resistivity_model,
         )
         before: dict[str, int] = {}
         for curve, (lower, upper) in RANGES.items():
@@ -88,6 +89,7 @@ class PhysicsConstraints:
         after_score = score_curves_against_truth(
             {curve: result[curve].to_numpy(dtype=float) for curve in result if curve != "DEPT"},
             truth_slice,
+            resistivity_config=scenario.petrophysics.resistivity_model,
         )
         report: dict[str, object] = {
             "range_violations_before": before,

@@ -33,49 +33,74 @@ def calculate_resistivity(
     return rt
 
 
-def calculate_expected_curves(
-    truth: GroundTruth,
+def calculate_expected_curves_from_arrays(
+    *,
+    vsh: np.ndarray,
+    phi: np.ndarray,
+    sw: np.ndarray,
+    lithology: np.ndarray,
+    fluid: np.ndarray,
     resistivity_config: ResistivityModelConfig | None = None,
 ) -> dict[str, np.ndarray]:
-    """Return the deterministic tool response before smoothing and realism."""
+    """Return deterministic expected curves from hidden petrophysical arrays."""
     config = resistivity_config or ResistivityModelConfig()
-    rho_matrix = np.array([MATRIX_DENSITY[item] for item in truth.lithology])
-    rho_fluid = np.array([FLUID_DENSITY[item] for item in truth.fluid])
-    dt_matrix = np.array([MATRIX_DT[item] for item in truth.lithology])
-    dt_fluid = np.array([FLUID_DT[item] for item in truth.fluid])
+    vsh = np.asarray(vsh, dtype=float)
+    phi = np.asarray(phi, dtype=float)
+    sw = np.asarray(sw, dtype=float)
+    lithology = np.asarray(lithology, dtype=str)
+    fluid = np.asarray(fluid, dtype=str)
+    rho_matrix = np.array([MATRIX_DENSITY[item] for item in lithology])
+    rho_fluid = np.array([FLUID_DENSITY[item] for item in fluid])
+    dt_matrix = np.array([MATRIX_DT[item] for item in lithology])
+    dt_fluid = np.array([FLUID_DT[item] for item in fluid])
 
-    gr = 18.0 + 132.0 * truth.vsh
-    gr += np.where(truth.lithology == "limestone", -7.0, 0.0)
-    gr += np.where(truth.lithology == "siltstone", 10.0, 0.0)
-    gr += np.where(truth.lithology == "marl", 15.0, 0.0)
-    rhob = (1 - truth.phi) * rho_matrix + truth.phi * rho_fluid
-    nphi = truth.phi + 0.17 * truth.vsh
-    gas_mask = truth.fluid == "gas"
-    nphi[gas_mask] -= 0.12 + 0.10 * truth.phi[gas_mask]
-    dt = (1 - truth.phi) * dt_matrix + truth.phi * dt_fluid + 18.0 * truth.vsh
-    nphi += np.where(truth.lithology == "marl", 0.05, 0.0)
-    dt += np.where(truth.lithology == "marl", 8.0, 0.0)
+    gr = 18.0 + 132.0 * vsh
+    gr += np.where(lithology == "limestone", -7.0, 0.0)
+    gr += np.where(lithology == "siltstone", 10.0, 0.0)
+    gr += np.where(lithology == "marl", 15.0, 0.0)
+    rhob = (1 - phi) * rho_matrix + phi * rho_fluid
+    nphi = phi + 0.17 * vsh
+    gas_mask = fluid == "gas"
+    nphi[gas_mask] -= 0.12 + 0.10 * phi[gas_mask]
+    dt = (1 - phi) * dt_matrix + phi * dt_fluid + 18.0 * vsh
+    nphi += np.where(lithology == "marl", 0.05, 0.0)
+    dt += np.where(lithology == "marl", 8.0, 0.0)
     rt = calculate_resistivity(
-        truth.phi,
-        truth.sw,
-        truth.vsh,
-        truth.lithology,
-        truth.fluid,
+        phi,
+        sw,
+        vsh,
+        lithology,
+        fluid,
         config,
     )
 
-    coal = truth.lithology == "coal"
+    coal = lithology == "coal"
     gr[coal] = np.minimum(gr[coal], 75.0)
     rhob[coal] = np.clip(rhob[coal], 1.15, 1.75)
     nphi[coal] = np.maximum(nphi[coal], 0.30)
     rt[coal] *= 2.0
 
-    anhydrite = truth.lithology == "anhydrite"
+    anhydrite = lithology == "anhydrite"
     gr[anhydrite] = np.minimum(gr[anhydrite], 35.0)
     rhob[anhydrite] = np.clip(rhob[anhydrite], 2.85, 3.05)
     nphi[anhydrite] = np.clip(nphi[anhydrite], -0.05, 0.08)
     rt[anhydrite] *= 3.0
     return {"GR": gr, "RHOB": rhob, "NPHI": nphi, "DT": dt, "RT": rt}
+
+
+def calculate_expected_curves(
+    truth: GroundTruth,
+    resistivity_config: ResistivityModelConfig | None = None,
+) -> dict[str, np.ndarray]:
+    """Return the deterministic tool response before smoothing and realism."""
+    return calculate_expected_curves_from_arrays(
+        vsh=truth.vsh,
+        phi=truth.phi,
+        sw=truth.sw,
+        lithology=truth.lithology,
+        fluid=truth.fluid,
+        resistivity_config=resistivity_config,
+    )
 
 
 class PhysicsForwardLogModel:

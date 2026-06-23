@@ -7,19 +7,9 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from synthetic_well_logs.rocks import SUPPORTED_FACIES
+
 SUPPORTED_CURVES = {"DEPT", "GR", "CALI", "RHOB", "NPHI", "DT", "RT"}
-SUPPORTED_FACIES = {
-    "shale",
-    "clean_sandstone",
-    "shaly_sandstone",
-    "tight_sandstone",
-    "limestone",
-    "dolomite",
-    "siltstone",
-    "marl",
-    "coal",
-    "anhydrite",
-}
 
 
 class StrictModel(BaseModel):
@@ -149,6 +139,22 @@ class PetrophysicsConfig(StrictModel):
     resistivity_model: ResistivityModelConfig = Field(default_factory=ResistivityModelConfig)
 
 
+class RequiredIntervalConfig(StrictModel):
+    facies: str
+    thickness_m: tuple[float, float]
+    count: int = Field(default=1, ge=1, le=10)
+    role: Literal["target", "distractor", "comparison", "quality_control"] = "distractor"
+
+    @model_validator(mode="after")
+    def validate_interval(self) -> RequiredIntervalConfig:
+        low, high = self.thickness_m
+        if low <= 0:
+            raise ValueError("required_intervals[].thickness_m lower bound must be positive")
+        if high < low:
+            raise ValueError("required_intervals[].thickness_m upper bound must not be lower")
+        return self
+
+
 class ScenarioConfig(StrictModel):
     well: WellConfig
     depth: DepthConfig
@@ -159,6 +165,7 @@ class ScenarioConfig(StrictModel):
     realism: RealismConfig = Field(default_factory=RealismConfig)
     tool_resolution: ToolResolutionConfig = Field(default_factory=ToolResolutionConfig)
     petrophysics: PetrophysicsConfig = Field(default_factory=PetrophysicsConfig)
+    required_intervals: list[RequiredIntervalConfig] = Field(default_factory=list)
     difficulty: Literal["beginner", "intermediate", "advanced"] = "intermediate"
     seed: int = 42
 
@@ -174,6 +181,16 @@ class ScenarioConfig(StrictModel):
             raise ValueError("curves must not contain duplicates")
         if self.target.reservoir_type not in self.geology.facies_set:
             raise ValueError("target.reservoir_type must be present in geology.facies_set")
+        required_unknown = {
+            item.facies
+            for item in self.required_intervals
+            if item.facies not in self.geology.facies_set
+        }
+        if required_unknown:
+            raise ValueError(
+                f"required_intervals facies must be present in geology.facies_set: "
+                f"{sorted(required_unknown)}"
+            )
         return self
 
     @classmethod

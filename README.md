@@ -55,7 +55,11 @@ python -m venv .venv
 Результат: `well_001.las`, `well_001_truth.json`, `well_001_manifest.json` и
 интерактивный `well_001_preview.html`.
 
-Пять готовых учебных задач генерируются одной командой:
+## Educational scenarios and student answer checking
+
+Пять готовых учебных задач генерируются одной командой. Сценарии используют
+`required_intervals`, поэтому учебные distractor/comparison породы гарантированно
+присутствуют в hidden truth:
 
 ```powershell
 python -m synthetic_well_logs generate-educational-suite --out out/educational_suite
@@ -72,8 +76,9 @@ python -m synthetic_well_logs check-answer `
 python -m synthetic_well_logs validate-dataset-structure --root data/raw_las
 ```
 
-Форматы описаны в `docs/student_answer_format.md` и
-`docs/data_collection_guidelines.md`.
+Ответы студентов могут содержать как `lithology_intervals`, так и более детальные
+`facies_intervals`; старый формат без `facies_intervals` остается валидным. Форматы
+описаны в `docs/student_answer_format.md` и `docs/data_collection_guidelines.md`.
 
 ## Data ingestion
 

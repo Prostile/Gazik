@@ -1,5 +1,16 @@
 # Породы и фации
 
+В проекте есть два уровня описания. `lithology` — обобщенная порода, а `facies` —
+детальная учебная разновидность. Например, `clean_sandstone`, `shaly_sandstone` и
+`tight_sandstone` являются разными фациями, но имеют общую литологию `sandstone`.
+
+Поэтому в ответах студентов поддерживаются два независимых блока:
+
+- `lithology_intervals` — обобщенная порода: `sandstone`, `shale`, `limestone`,
+  `dolomite`, `coal`, `anhydrite` и т.д.;
+- `facies_intervals` — детальная учебная фация: `clean_sandstone`,
+  `shaly_sandstone`, `tight_sandstone`, `siltstone`, `marl` и т.д.
+
 | Facies | Русское название | Vsh | PHI | Sw | Типичный отклик | Reservoir/pay |
 |---|---|---:|---:|---:|---|---|
 | shale | глина | 0.65–1.00 | 0.03–0.15 | 0.80–1.00 | высокий GR/NPHI, низкий RT | нет |

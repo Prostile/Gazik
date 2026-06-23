@@ -8,6 +8,11 @@ geology:
 target:
   reservoir_type: clean_sandstone
   hydrocarbon: gas
+required_intervals:
+  - facies: siltstone
+    thickness_m: [4.0, 8.0]
+    count: 1
+    role: comparison
 curves: [DEPT, GR, CALI, RHOB, NPHI, DT, RT]
 artifacts: {noise: true, washout: true, spikes: true, missing_intervals: true, depth_shift: false}
 realism: {mode: statistical, strength: 0.40}

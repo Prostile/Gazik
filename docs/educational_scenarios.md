@@ -1,12 +1,16 @@
 # Учебные сценарии
 
-| Сценарий | Цель | Ключевые кривые | Проверяемая ошибка |
+| Сценарий | Required intervals | Ожидаемый тип ответа | Проверяемая ошибка |
 |---|---|---|---|
-| `coal_bed_detection` | Найти уголь | RHOB, NPHI, RT, GR | Уголь принят за pay |
-| `shaly_sand_vs_siltstone` | Разделить глинистый песчаник и алевролит | GR, RHOB, RT | Завышена эффективная толщина |
-| `carbonate_basic` | Различить limestone, dolomite, marl, anhydrite | GR, RHOB, NPHI, DT | Ангидрит принят за коллектор |
-| `bad_hole_quality_control` | Найти washout и пропуски | CALI, RHOB, NPHI | Технический дефект принят за геологию |
-| `gas_sand_vs_tight_sand` | Отличить газовый от плотного песчаника | RHOB–NPHI, RT, GR | Плотный песчаник принят за pay |
+| `coal_bed_detection` | `coal`, `siltstone` | lithology + facies | Уголь принят за pay |
+| `shaly_sand_vs_siltstone` | `siltstone` | facies | Глинистый песчаник спутан с алевролитом |
+| `carbonate_basic` | `marl`, `anhydrite` | lithology + facies | Ангидрит принят за коллектор, мергель за известняк |
+| `bad_hole_quality_control` | `siltstone` | quality + reservoir/pay | Технический дефект принят за геологию |
+| `gas_sand_vs_tight_sand` | `tight_sandstone` | facies + pay | Плотный песчаник принят за газовый pay |
+
+`required_intervals` гарантируют, что ключевые нецелевые породы действительно
+появятся, а не будут зависеть от seed. Они вставляются вне target interval, поэтому
+distractor не перезаписывает правильный продуктивный/водоносный пласт.
 
 Правильный ответ формируется из `truth.json`: маски `is_reservoir`, `is_pay`,
 литология/фации и `artifacts`/`bad_hole_mask`. Водоносный целевой песчаник в первом

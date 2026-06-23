@@ -13,6 +13,6 @@ class StudentCheckReport(BaseModel):
     reservoir_score: dict[str, Any]
     pay_score: dict[str, Any]
     lithology_score: dict[str, Any]
+    facies_score: dict[str, Any] | None = None
     quality_score: dict[str, Any]
     feedback: list[str]
-

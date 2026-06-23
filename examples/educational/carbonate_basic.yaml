@@ -10,6 +10,15 @@ target:
   hydrocarbon: oil
   porosity_range: [0.08, 0.18]
   water_saturation_range: [0.30, 0.55]
+required_intervals:
+  - facies: marl
+    thickness_m: [5.0, 10.0]
+    count: 1
+    role: comparison
+  - facies: anhydrite
+    thickness_m: [4.0, 8.0]
+    count: 1
+    role: distractor
 curves: [DEPT, GR, CALI, RHOB, NPHI, DT, RT]
 artifacts: {noise: true, washout: false, spikes: true, missing_intervals: false, depth_shift: false}
 realism: {mode: statistical, strength: 0.30}

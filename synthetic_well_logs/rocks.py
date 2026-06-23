@@ -142,3 +142,25 @@ FACIES_CURVE_RANGES = {
         "RT": (10.0, 10_000.0),
     },
 }
+
+SUPPORTED_FACIES = frozenset(PRIORS)
+SUPPORTED_LITHOLOGIES = frozenset(MATRIX_DENSITY)
+
+
+def validate_rock_catalog() -> None:
+    """Validate that every facies has complete petrophysical and reporting metadata."""
+    missing_lithology = set(PRIORS) - set(LITHOLOGY)
+    missing_display_names = set(PRIORS) - set(FACIES_DISPLAY_NAMES_RU)
+    missing_density = set(LITHOLOGY.values()) - set(MATRIX_DENSITY)
+    missing_dt = set(LITHOLOGY.values()) - set(MATRIX_DT)
+    missing_curve_ranges = set(PRIORS) - set(FACIES_CURVE_RANGES)
+    problems = {
+        "missing_lithology": sorted(missing_lithology),
+        "missing_display_names": sorted(missing_display_names),
+        "missing_density": sorted(missing_density),
+        "missing_dt": sorted(missing_dt),
+        "missing_curve_ranges": sorted(missing_curve_ranges),
+    }
+    failed = {name: values for name, values in problems.items() if values}
+    if failed:
+        raise RuntimeError(f"incomplete rock catalog: {failed}")

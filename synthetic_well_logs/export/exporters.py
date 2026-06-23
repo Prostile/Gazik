@@ -183,6 +183,15 @@ def export_generated_well(well: GeneratedWell, prefix: Path) -> dict[str, Path]:
         "seed": well.scenario.seed,
         "depth": well.scenario.depth.model_dump(),
         "curves": list(well.curves.columns),
+        "required_intervals": [
+            {
+                "facies": item.facies,
+                "count": item.count,
+                "role": item.role,
+                "thickness_m": list(item.thickness_m),
+            }
+            for item in well.scenario.required_intervals
+        ],
         "facies": [
             {"id": item, "display_name_ru": FACIES_DISPLAY_NAMES_RU[item]}
             for item in well.scenario.geology.facies_set

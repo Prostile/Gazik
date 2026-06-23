@@ -7,6 +7,8 @@
 - Added shale-corrected resistivity configuration and five educational scenarios.
 - Added student-answer scoring for reservoir, pay, lithology and recording quality.
 - Added raw LAS collection conventions, example data and structure validation CLI.
+- Unified forward/scoring expected-curve physics, added guaranteed required intervals
+  and separated facies scoring from generalized lithology scoring.
 
 ## 0.3.0 — Full Hybrid #2
 
