@@ -47,10 +47,33 @@ class SemiMarkovFaciesGenerator:
             if cursor < depth.size:
                 current = self._next_facies(current, facies_set, scenario, rng)
 
+        role_labels = np.full(depth.size, "", dtype="U32")
+        source_labels = np.full(depth.size, "", dtype="U32")
+        required_indices = np.full(depth.size, -1, dtype=int)
+        placement_labels = np.full(depth.size, "", dtype="U16")
+
         target_mask = self._inject_learning_target(values, scenario, rng)
         protected_mask = target_mask.copy()
-        self._inject_required_intervals(values, protected_mask, scenario, rng)
-        intervals = self._to_intervals(depth, values, target_mask, scenario)
+        self._inject_required_intervals(
+            values,
+            protected_mask,
+            role_labels,
+            source_labels,
+            required_indices,
+            placement_labels,
+            scenario,
+            rng,
+        )
+        intervals = self._to_intervals(
+            depth,
+            values,
+            target_mask,
+            scenario,
+            role_labels,
+            source_labels,
+            required_indices,
+            placement_labels,
+        )
         return values, intervals, target_mask
 
     @staticmethod
@@ -115,21 +138,42 @@ class SemiMarkovFaciesGenerator:
         self,
         values: np.ndarray,
         protected_mask: np.ndarray,
+        role_labels: np.ndarray,
+        source_labels: np.ndarray,
+        required_indices: np.ndarray,
+        placement_labels: np.ndarray,
         scenario: ScenarioConfig,
         rng: np.random.Generator,
     ) -> np.ndarray:
-        for required in scenario.required_intervals:
+        for required_index, required in enumerate(scenario.required_intervals):
             for _ in range(required.count):
                 low, high = required.thickness_m
                 thickness_m = float(rng.uniform(low, high))
                 count = self._sample_count(thickness_m, scenario)
-                start = self._choose_free_start(protected_mask, count, required.facies)
-                values[start : start + count] = required.facies
-                protected_mask[start : start + count] = True
+                start = self._choose_free_start(
+                    protected_mask,
+                    count,
+                    required.facies,
+                    required.placement,
+                    rng,
+                )
+                stop = start + count
+                values[start:stop] = required.facies
+                protected_mask[start:stop] = True
+                role_labels[start:stop] = required.role
+                source_labels[start:stop] = "required_interval"
+                required_indices[start:stop] = required_index
+                placement_labels[start:stop] = required.placement
         return protected_mask
 
     @staticmethod
-    def _choose_free_start(protected_mask: np.ndarray, count: int, facies: str) -> int:
+    def _choose_free_start(
+        protected_mask: np.ndarray,
+        count: int,
+        facies: str,
+        placement: str,
+        rng: np.random.Generator,
+    ) -> int:
         free = ~protected_mask
         changes = np.flatnonzero(free[1:] != free[:-1]) + 1
         starts = np.r_[0, changes]
@@ -144,8 +188,8 @@ class SemiMarkovFaciesGenerator:
                 f"cannot fit required interval for facies {facies!r}: "
                 "no free depth segment outside protected target intervals"
             )
-        # Use a deterministic spread over the current free candidates; the caller's random
-        # thickness already controls stochasticity, and this keeps placement stable in tests.
+        if placement == "random":
+            return int(rng.choice(np.asarray(candidates, dtype=int)))
         return candidates[len(candidates) // 2]
 
     @staticmethod
@@ -154,9 +198,21 @@ class SemiMarkovFaciesGenerator:
         values: np.ndarray,
         target_mask: np.ndarray,
         scenario: ScenarioConfig,
+        role_labels: np.ndarray,
+        source_labels: np.ndarray,
+        required_indices: np.ndarray,
+        placement_labels: np.ndarray,
     ) -> list[FaciesInterval]:
         changes = (
-            np.flatnonzero((values[1:] != values[:-1]) | (target_mask[1:] != target_mask[:-1])) + 1
+            np.flatnonzero(
+                (values[1:] != values[:-1])
+                | (target_mask[1:] != target_mask[:-1])
+                | (role_labels[1:] != role_labels[:-1])
+                | (source_labels[1:] != source_labels[:-1])
+                | (required_indices[1:] != required_indices[:-1])
+                | (placement_labels[1:] != placement_labels[:-1])
+            )
+            + 1
         )
         starts = np.r_[0, changes]
         stops = np.r_[changes, values.size]
@@ -164,6 +220,7 @@ class SemiMarkovFaciesGenerator:
         for start, stop in zip(starts, stops, strict=True):
             base = scenario.depth.stop if stop == values.size else float(depth[stop])
             facies = str(values[start])
+            required_index = int(required_indices[start])
             intervals.append(
                 FaciesInterval(
                     top=float(depth[start]),
@@ -171,6 +228,10 @@ class SemiMarkovFaciesGenerator:
                     facies=facies,
                     lithology=LITHOLOGY[facies],
                     trend=scenario.geology.stacking_pattern,
+                    injected_role=str(role_labels[start]) or None,
+                    injection_source=str(source_labels[start]) or None,
+                    required_interval_index=(required_index if required_index >= 0 else None),
+                    placement=str(placement_labels[start]) or None,
                 )
             )
         return intervals
