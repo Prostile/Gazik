@@ -144,6 +144,7 @@ class RequiredIntervalConfig(StrictModel):
     thickness_m: tuple[float, float]
     count: int = Field(default=1, ge=1, le=10)
     role: Literal["target", "distractor", "comparison", "quality_control"] = "distractor"
+    placement: Literal["deterministic", "random"] = "deterministic"
 
     @model_validator(mode="after")
     def validate_interval(self) -> RequiredIntervalConfig:
