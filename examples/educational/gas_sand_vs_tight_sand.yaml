@@ -15,6 +15,7 @@ required_intervals:
     thickness_m: [5.0, 10.0]
     count: 1
     role: distractor
+    placement: random
 curves: [DEPT, GR, CALI, RHOB, NPHI, DT, RT]
 artifacts: {noise: true, washout: false, spikes: true, missing_intervals: false, depth_shift: false}
 realism: {mode: statistical, strength: 0.35}
